@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { MapPin, Loader2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
 import { Slider } from './ui/slider';
 import { Button } from './ui/button';
 import { InputGroup, InputGroupInput } from './ui/input-group';
@@ -185,7 +185,7 @@ export default function LocationMap() {
                         )}
                     </form> */}
                     <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
-                        <LocationCard handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} setSearchQuery={setSearchQuery} />
+                        <LocationCard handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
                     </div>
 
                     {/* {loading && (
@@ -233,7 +233,7 @@ export default function LocationMap() {
     );
 }
 
-const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, setSearchQuery }: { handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, setSearchQuery: (value: string) => void }) => {
+const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, searchError, setSearchQuery }: { handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, searchError: string | null, setSearchQuery: (value: string) => void }) => {
 
 
 
@@ -267,9 +267,9 @@ const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch
 
                     </form>
                 </CardContent>
-                {/* <CardFooter>
-
-                </CardFooter> */}
+                <CardFooter>
+                    {searchError && <p className="text-sm text-red-600 text-center">{searchError}</p>}
+                </CardFooter>
             </Card>
             <div className='w-full sm:w-1/3 md:w-1/2 flex gap-4 '>
                 <Card className='w-full  md:w-1/2 gap-2 p-2'>
