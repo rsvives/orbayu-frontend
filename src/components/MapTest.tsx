@@ -21,7 +21,7 @@ export default function LocationMap() {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
     const [searchError, setSearchError] = useState<string | null>(null);
-    const [locationName, setLocationName] = useState('');
+    // const [locationName, setLocationName] = useState('');
     const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
     const [drawerDialogOpen, setDrawerDialogOpen] = useState(false);
 
@@ -32,7 +32,7 @@ export default function LocationMap() {
 
     const mutation = useMutation({
         mutationFn: async (date: Date) => await weatherService.getWeather({ lat: location.lat, lon: location.lng, radius, start_date: formatDate(date), end_date: formatDate(date) }),
-        onMutate(variables, context) {
+        onMutate() {
             setDrawerDialogOpen(true)
         },
         onSuccess: async () => {
@@ -73,6 +73,7 @@ export default function LocationMap() {
                 setSearchError('Address not found. Try another search.');
             }
         } catch (err) {
+            console.error(err)
             setSearchError('Error searching for address. Please try again.');
         } finally {
             setSearchLoading(false);
@@ -184,7 +185,7 @@ export default function LocationMap() {
                         )}
                     </form> */}
                     <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
-                        <LocationCard locationName={locationName} handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
+                        <LocationCard handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
                     </div>
 
                     {/* {loading && (
@@ -219,7 +220,7 @@ export default function LocationMap() {
                                 {/* // <Skeleton className="h-[600px] w-full rounded-md" /> */}
 
                             </div>
-                            <DatesSection lat={location.lat} lon={location.lng} radius={radius} handleCheckWeatherMutation={handleCheckWeatherMutation} mutationPending={mutation.isPending} />
+                            <DatesSection handleCheckWeatherMutation={handleCheckWeatherMutation} mutationPending={mutation.isPending} />
 
                             <DrawerDialog open={drawerDialogOpen} setOpen={setDrawerDialogOpen} />
                         </div>
@@ -232,7 +233,7 @@ export default function LocationMap() {
     );
 }
 
-const LocationCard = ({ locationName, handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, searchError, setSearchQuery }: { locationName: string, handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, searchError: string | null, setSearchQuery: (value: string) => void }) => {
+const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, setSearchQuery }: { handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, setSearchQuery: (value: string) => void }) => {
 
 
 

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent } from "./ui/card";
 import { parseDate } from "chrono-node"
 import { CalendarIcon, CloudRain, Loader2, Snowflake, ThermometerSun, Wind } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -11,16 +11,14 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover"
 import React from "react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "./ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { toast } from "sonner";
 import { Toggle } from "./ui/toggle";
-import { weatherService } from "@/services/weatherService";
-import { useMutation } from "@tanstack/react-query";
 import { formatDate } from "@/lib/dates";
 
 
 
-export const DatesSection = ({ lat, lon, radius, handleCheckWeatherMutation, mutationPending }: { lat: number | undefined | null, lon: number | undefined | null, radius: number, handleCheckWeatherMutation: (date: Date | undefined) => void, mutationPending: boolean }) => {
+export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { handleCheckWeatherMutation: (date: Date | undefined) => void, mutationPending: boolean }) => {
     const [open, setOpen] = React.useState(false)
     const [value, setValue] = React.useState("December 2026")
     const [date, setDate] = React.useState<Date | undefined>(
@@ -46,7 +44,7 @@ export const DatesSection = ({ lat, lon, radius, handleCheckWeatherMutation, mut
 
                 <CardContent className='flex flex-col gap-4 text-sm'>
                     <div className="grid sm:flex-row flex-col gap-4">
-                        <div className="flex flex-row flex-col gap-2 w-full">
+                        <div className="flex flex-row gap-2 w-full">
                             <div className="flex flex-col gap-2 w-full">
                                 <Label htmlFor="date" className="px-1">
                                     Check Date

@@ -1,4 +1,4 @@
-export const LogoLettering = ({ fill = '#511e78' }: { fill?: string }) => {
+export const LogoLettering = () => {
 
     return (
         // <svg height={32} viewBox="0 0 150 48">

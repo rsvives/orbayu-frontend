@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Circle, CircleMarker, LayersControl, MapContainer, Marker, TileLayer, useMap } from "react-leaflet"
+import { Circle, MapContainer, TileLayer, useMap } from "react-leaflet"
 
 export const Map = ({ lat, lng, radius }: { lat: number | null, lng: number | null, radius: number }) => {
 

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils"
+
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,7 +9,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import {
     Drawer,
@@ -19,7 +18,6 @@ import {
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
-    DrawerTrigger,
 } from "@/components/ui/drawer"
 import React from "react"
 import { Loader2 } from "lucide-react"
@@ -37,6 +35,7 @@ export const DrawerDialog = ({ open, setOpen }: { open: boolean, setOpen: (open:
             setLoadingText(loadingTexts[randomIndex])
         }, 2000)
         return () => clearInterval(interval)
+        // eslint-disable-next-line 
     }, [])
     if (isDesktop) {
         return (
