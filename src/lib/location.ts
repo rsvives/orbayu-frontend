@@ -3,7 +3,7 @@ import axios from "axios";
 export const getLocationBySearchQuery = async (query: string) => {
 
     const response = await axios.get(
-        `/nominatim/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`,
         {
             headers: {
                 "Access-Control-Allow-Origin": "*",
@@ -21,7 +21,7 @@ export const getLocationBySearchQuery = async (query: string) => {
 export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: number }) => {
 
     const response = await axios.get(
-        `/nominatim/reverse?format=json&lat=${lat}&lon=${lon}&zoom=8&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=8&addressdetails=1`,
         {
             headers: {
                 "Access-Control-Allow-Origin": "*",
