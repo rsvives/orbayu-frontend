@@ -51,6 +51,11 @@ export default function LocationMap() {
 
     const handleSearch = async (e: FormEvent) => {
         e.preventDefault();
+
+        const activeElement = window.document.activeElement
+        if (activeElement instanceof HTMLElement) {
+            activeElement.blur()
+        }
         if (!searchQuery.trim()) return;
 
         setSearchLoading(true);
@@ -234,9 +239,6 @@ export default function LocationMap() {
 }
 
 const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, searchError, setSearchQuery }: { handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, searchError: string | null, setSearchQuery: (value: string) => void }) => {
-
-
-
     return (
         <>
             <Card className='w-full md:w-1/2 gap-2 p-2'>
