@@ -33,7 +33,7 @@ export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: numb
     )
     const data = await response.data;
     console.log('function', { getLocationByCoords: data })
-    return [data]
+    return data
 }
 
 export const getCurrentLocation = async (): Promise<{ lat: number, lng: number, accuracy: number }> => {
