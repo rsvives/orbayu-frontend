@@ -1,57 +1,55 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { MapPin, Loader2, Search, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
-import { Card, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Slider } from './ui/slider';
 import { Button } from './ui/button';
-import { InputGroup, InputGroupAddon, InputGroupInput } from './ui/input-group';
+import { InputGroup, InputGroupInput } from './ui/input-group';
 import { DatesSection } from './DatesSection';
+import { getCurrentLocation, getLocationByCoords, getLocationBySearchQuery } from '@/lib/location';
+import { Map } from './Map';
+import { DrawerDialog } from './DrawerDialog';
+import { useMutation } from '@tanstack/react-query';
 import { weatherService } from '@/services/weatherService';
-import { useQueryClient } from '@tanstack/react-query';
+import { formatDate } from '@/lib/dates';
 
 export default function LocationMap() {
-    const [location, setLocation] = useState({ lat: null, lng: null, accuracy: null });
+    const [location, setLocation] = useState<{ lat: number | null, lng: number | null, accuracy: number | null }>({ lat: null, lng: null, accuracy: null });
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
+    const [radius, setRadius] = useState(30);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchLoading, setSearchLoading] = useState(false);
-    const [searchError, setSearchError] = useState(null);
-    const [locationName, setLocationName] = useState('Your current location');
-    const initialLocation = useRef(null);
-    const [radius, setRadius] = useState(50);
+    const [searchError, setSearchError] = useState<string | null>(null);
+    const [locationName, setLocationName] = useState('');
+    const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
+    const [drawerDialogOpen, setDrawerDialogOpen] = useState(false);
 
     useEffect(() => {
-        if ('geolocation' in navigator) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const currentLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
-                    initialLocation.current = currentLocation;
-                    setLocation(currentLocation);
-                    setLocationName('Your current location');
-                    setLoading(false);
-                },
-                (err) => {
-                    setError(err.message);
-                    setLoading(false);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                }
-            );
-        } else {
-            setError('Geolocation unavailable');
-            setLoading(false);
-
-        }
+        handleRefresh()
     }, []);
 
-    const handleSearch = async (e) => {
+
+    const mutation = useMutation({
+        mutationFn: async (date: Date) => await weatherService.getWeather({ lat: location.lat, lon: location.lng, radius, start_date: formatDate(date), end_date: formatDate(date) }),
+        onMutate(variables, context) {
+            setDrawerDialogOpen(true)
+        },
+        onSuccess: async () => {
+            console.log("I'm first!")
+            setDrawerDialogOpen(true)
+        },
+    })
+
+    const handleCheckWeatherMutation = async (date: Date | undefined) => {
+        if (date) {
+            mutation.mutate(date)
+        }
+    }
+
+
+
+    const handleSearch = async (e: FormEvent) => {
         e.preventDefault();
         if (!searchQuery.trim()) return;
 
@@ -59,20 +57,17 @@ export default function LocationMap() {
         setSearchError(null);
 
         try {
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
-            );
-            const data = await response.json();
+            const result = await getLocationBySearchQuery(searchQuery)
 
-            if (data && data.length > 0) {
-                const result = data[0];
+            if (result) {
                 setLocation({
                     lat: parseFloat(result.lat),
                     lng: parseFloat(result.lon),
                     accuracy: null
                 });
                 setLocationName(result.display_name);
-                setSearchQuery(result.display_name)
+                setSearchQuery(result.display_name);
+                // setSearchQuery('');
                 setError(null);
             } else {
                 setSearchError('Address not found. Try another search.');
@@ -86,8 +81,12 @@ export default function LocationMap() {
 
     useEffect(() => {
         if (error) {
-            toast("Geolocation unavailable", {
+            console.log({ erroooooor: error })
+            toast.error("Geolocation unavailable", {
                 description: "Please check your device location settings and try again.",
+                // position: 'top-left',
+                // richColors: true,
+                classNames: { error: 'bg-red-500 text-white' },
                 duration: 10000,
                 dismissible: true,
                 cancel: <Button variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
@@ -97,9 +96,14 @@ export default function LocationMap() {
         }
     }, [error])
 
-    const handleRefresh = () => {
-        if (initialLocation.current) {
+
+
+    const handleRefresh = async () => {
+        console.log('refresh')
+        if (initialLocation.current?.lat && initialLocation.current?.lng) {
             setLocation(initialLocation.current);
+            const locationName = await getLocationByCoords({ lat: initialLocation.current.lat, lon: initialLocation.current.lng })
+            console.log(initialLocation.current, locationName)
             setLocationName('Your current location');
             setSearchQuery('');
             setError(null);
@@ -108,29 +112,32 @@ export default function LocationMap() {
             setLoading(true);
             setError(null);
             setSearchQuery('');
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const currentLocation = {
-                        lat: position.coords.latitude,
-                        lng: position.coords.longitude,
-                        accuracy: position.coords.accuracy
-                    };
+            try {
+                const currentLocation = await getCurrentLocation()
+                if (currentLocation) {
+                    console.log('current')
                     initialLocation.current = currentLocation;
                     setLocation(currentLocation);
-                    setLocationName('Your current location');
-                    setLoading(false);
-                },
-                (err) => {
-                    setError(err.message);
+                    console.log(currentLocation)
+                    const locationName = await getLocationByCoords({ lat: currentLocation.lat, lon: currentLocation.lng })
+                    console.log(initialLocation.current, { locationName })
+                    setLocationName(locationName.display_name);
+                    setSearchQuery(locationName.display_name);
                     setLoading(false);
                 }
-            );
+            }
+            catch (err) {
+                console.error({ err })
+                if (err instanceof Error) {
+                    setError(err.message);
+
+                }
+                setLoading(false);
+            }
+
         }
     };
-    const handleRadiusChange = (value: number[]) => {
-        // console.log(value[0]);
-        setRadius(value[0]);
-    }
+
     const handleDrawArea = () => {
         toast('Feature not available yet', {
             duration: 5000,
@@ -140,9 +147,10 @@ export default function LocationMap() {
     }
 
 
-
-
-
+    const handleRadiusChange = (value: number[]) => {
+        // console.log(value[0]);
+        setRadius(value[0]);
+    }
     // if (query.isLoading) return <div>...Loading</div>
     // if (query.isError) return <div>...Error</div>
     // console.log(query.data) 
@@ -151,12 +159,12 @@ export default function LocationMap() {
         < div className="max-w-4xl mx-auto" >
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
 
-                {JSON.stringify(location)}
+                {/* {JSON.stringify(location)} */}
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-6 flex flex-col gap-4">
                     {/* Search Bar */}
-                    <form onSubmit={handleSearch} className="mb-6">
+                    {/* <form onSubmit={handleSearch} className="mb-6">
                         <div className="flex gap-2">
                             <div className="flex-1 relative">
                                 <InputGroup>
@@ -174,34 +182,46 @@ export default function LocationMap() {
                         {searchError && (
                             <p className="mt-2 text-sm text-red-600">{searchError}</p>
                         )}
-                    </form>
+                    </form> */}
+                    <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
+                        <LocationCard locationName={locationName} handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
+                    </div>
 
-                    {loading && (
+                    {/* {loading && (
                         <div className="flex flex-col items-center justify-center py-12">
                             <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
                             <p className="text-gray-600">Getting your location...</p>
                         </div>
-                    )}
+                    )} */}
+
 
                     {location && !loading && (
                         <div className="space-y-6">
-                            {/* Location Name */}
 
-                            {/* Map */}
                             <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm relative">
-                                <Button variant={'outline'} className='absolute top-3 right-3' onClick={handleDrawArea}> <Pencil /> </Button>
-                                {/* <LocationCard /> */}
-                                <iframe
-                                    width="100%"
-                                    height="600"
-                                    frameBorder="0"
-                                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${location.lng - 0.01},${location.lat - 0.01},${location.lng + 0.01},${location.lat + 0.01}&layer=mapnik&marker=${location.lat},${location.lng}`}
-                                    className="w-full"
-                                />
-                                <DatesSection lat={location.lat} lon={location.lng} radius={radius} />
+                                <div className='absolute z-10 top-3 left-16 right-4 flex gap-4 '>
+                                    {/* <Card className='p-2 flex-1 rounded-md shadow-none border-1'>
+                                        <CardContent className='px-2 text-sm text-muted-foreground'>
+                                            {searchError || error &&
+                                                <p className="text-sm text-red-600 text-center">{searchError ?? error?.message}</p>
+                                            }
+                                        </CardContent>
+                                    </Card> */}
+                                    {/* <Button variant={'outline'} onClick={handleDrawArea}> <Pencil /> </Button> */}
+
+                                </div>
+                                {/* <div className="absolute top-3 left-16 right-4 sm:right-8 flex gap-4 flex-col sm:flex-row">
+                                    <LocationCard locationName={locationName} handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} />
+                                </div> */}
+
+                                <Map lat={location.lat} lng={location.lng} radius={radius} />
+
+                                {/* // <Skeleton className="h-[600px] w-full rounded-md" /> */}
+
                             </div>
+                            <DatesSection lat={location.lat} lon={location.lng} radius={radius} handleCheckWeatherMutation={handleCheckWeatherMutation} mutationPending={mutation.isPending} />
 
-
+                            <DrawerDialog open={drawerDialogOpen} setOpen={setDrawerDialogOpen} />
                         </div>
                     )}
                 </div>
@@ -212,40 +232,73 @@ export default function LocationMap() {
     );
 }
 
-const LocationCard = () => {
+const LocationCard = ({ locationName, handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, searchError, setSearchQuery }: { locationName: string, handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, searchError: string | null, setSearchQuery: (value: string) => void }) => {
+
+
+
     return (
-        <div className="absolute top-3 left-16 right-4 sm:right-8 flex gap-4 flex-col sm:flex-row">
-            <Card className='w-full sm:w-1/2 p-2 flex flex-row items-start  gap-2'>
-                <CardHeader className='p-2 flex-1'>
-                    <CardTitle className='flex items-center gap-2 text-sm'><MapPin className="h-3 w-3" />Location</CardTitle>
-                    <CardDescription className='overflow-hidden text-ellipsis line-clamp-1'>{locationName}</CardDescription>
+        <>
+            <Card className='w-full md:w-1/2 gap-2 p-2'>
+                <CardHeader className='px-2'>
+                    <CardTitle className='flex items-center gap-2 text-sm'>
+                        <MapPin className="h-3 w-3" />
+                        <h3>Location</h3>
+                    </CardTitle>
+
                 </CardHeader>
-                <div className='flex gap-2 items-center'>
-                    <Slider className='sm:hidden w-20' defaultValue={[50]} max={100} min={1} step={5} onValueChange={handleRadiusChange} />
-                    <Button variant={'outline'} className='sm:hidden' onClick={handleDrawArea}> <Pencil /> </Button>
+                <CardContent className='px-2' >
+                    {/* {locationName} */}
+                    <form onSubmit={(e) => handleSearch(e)}>
+                        <div className="flex gap-2">
+                            <div className="flex-1 relative">
+                                <InputGroup>
+                                    <InputGroupInput type='text' value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search a place, city or location..." />
+                                    {/* <InputGroupAddon>
+                                        <Search />
+                                    </InputGroupAddon> */}
+                                </InputGroup>
+                            </div>
+                            <Button type="submit" variant={'outline'}>
+                                {searchLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search />}
+                            </Button>
+                        </div>
 
-                </div>
+                    </form>
+                </CardContent>
+                {/* <CardFooter>
+
+                </CardFooter> */}
             </Card>
-            <div className='w-full sm:w-1/2 flex gap-4 '>
-                <Card className='hidden sm:flex w-full sm:w-1/2 p-2'>
-                    <CardHeader className='p-2 flex-1'>
-                        <CardTitle className='flex items-center justify-between gap-2 text-sm'>Radius   <span className='text-md font-medium'>{radius} km</span></CardTitle>
-                        <CardDescription className='flex flex-1 items-center gap-2 text-sm justify-center flex-col gap-2'>
-
-                            <Slider defaultValue={[50]} max={100} min={1} step={5} onValueChange={handleRadiusChange} />
-                        </CardDescription>
+            <div className='w-full sm:w-1/3 md:w-1/2 flex gap-4 '>
+                <Card className='w-full  md:w-1/2 gap-2 p-2'>
+                    <CardHeader className='px-2'>
+                        <CardTitle className='flex items-center justify-between gap-2 text-sm'>
+                            <h3>Radius</h3>
+                            <h3 className='text-md font-medium'>{radius} km</h3>
+                        </CardTitle>
                     </CardHeader>
-                </Card>
-                <Card className='hidden sm:flex sm:w-1/2 p-2'>
-                    <CardHeader className=' flex flex-col p-2'>
-                        <CardTitle className='flex items-center gap-2 text-sm'>Draw your own area</CardTitle>
-                        <CardDescription className='flex w-full justify-center gap-2 text-sm'>
-                            <Button variant={'outline'} className='w-full' onClick={handleDrawArea}> <Pencil /> Draw</Button>
-                        </CardDescription>
-                    </CardHeader>
-                </Card>
+                    <CardContent className='flex items-center gap-2 text-sm justify-center flex-1 px-2'>
+                        <div className='w-full h-4 '>
+                            <Slider defaultValue={[radius]} max={100} min={1} step={5} onValueChange={handleRadiusChange} />
+                        </div>
+                    </CardContent>
+                    {/* <CardFooter>
 
+                    </CardFooter> */}
+                </Card>
+                <Card className='hidden md:flex sm:w-1/2 gap-2 p-2'>
+                    <CardHeader className='px-2'>
+                        <CardTitle className='flex items-center justify-between gap-2 text-sm'>Draw your own area</CardTitle>
+                    </CardHeader>
+                    <CardContent className='flex items-center text-sm px-2'>
+                        <Button variant={'outline'} className='w-full' onClick={handleDrawArea}> <Pencil /> Draw</Button>
+                    </CardContent>
+                    {/* <CardFooter>
+
+                    </CardFooter> */}
+                </Card>
             </div>
-        </div >
+        </ >
     )
 }

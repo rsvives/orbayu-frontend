@@ -9,7 +9,7 @@ export const Map = ({ lat, lng, radius }: { lat: number | null, lng: number | nu
 
     if (!lat || !lng) {
         return (
-            <div className='h-[600px] relative bg-gray-200'></div>)
+            <div className='h-[300px] relative bg-gray-200'></div>)
     }
     return (
         <div className="h-[300px] ">
