@@ -65,7 +65,7 @@ export default function LocationMap() {
                     lng: parseFloat(result.lon),
                     accuracy: null
                 });
-                setLocationName(result.display_name);
+                // setLocationName(result.display_name);
                 setSearchQuery(result.display_name);
                 // setSearchQuery('');
                 setError(null);
@@ -105,7 +105,7 @@ export default function LocationMap() {
             setLocation(initialLocation.current);
             const locationName = await getLocationByCoords({ lat: initialLocation.current.lat, lon: initialLocation.current.lng })
             console.log(initialLocation.current, locationName)
-            setLocationName('Your current location');
+            // setLocationName('Your current location');
             setSearchQuery('');
             setError(null);
             setSearchError(null);
@@ -122,7 +122,7 @@ export default function LocationMap() {
                     console.log(currentLocation)
                     const locationName = await getLocationByCoords({ lat: currentLocation.lat, lon: currentLocation.lng })
                     console.log(initialLocation.current, { locationName })
-                    setLocationName(locationName.display_name);
+                    // setLocationName(locationName.display_name);
                     setSearchQuery(locationName.display_name);
                     setLoading(false);
                 }
@@ -185,7 +185,7 @@ export default function LocationMap() {
                         )}
                     </form> */}
                     <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
-                        <LocationCard handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
+                        <LocationCard handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} setSearchQuery={setSearchQuery} />
                     </div>
 
                     {/* {loading && (
