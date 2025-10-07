@@ -9,15 +9,20 @@ type Location = {
     name: string;
     coordinates: Coordinates;
 }
+type WeatherType = "rain" | "temperature" | "snow" | "wind"
 
 interface BasicWeatherData {
-    meanTemp: TemperatureData,
-    maxTemp: TemperatureData,
-    minTemp: TemperatureData,
+    temps: TemperatureData[],
+
     rain: RainData
 }
 
-type TemperatureData = [number[]]
+type TemperatureData = {
+    year: number
+    min_temps: number[]
+    max_temps: number[]
+    mean_temps: number[]
+}
 
 type RainData = {
     hours: [number[]]
