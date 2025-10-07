@@ -9,11 +9,11 @@ export const Map = ({ lat, lng, radius }: { lat: number | null, lng: number | nu
 
     if (!lat || !lng) {
         return (
-            <div className='h-[300px] relative bg-gray-200'></div>)
+            <div className='w-full h-[200px] sm:h-[300px] relative bg-gray-200'></div>)
     }
     return (
-        <div className="h-[300px] ">
-            <MapContainer style={{ zIndex: 5 }} className="h-full w-full" center={{ lat, lng }} zoom={zoom} scrollWheelZoom={false} >
+        <div className="w-full h-[200px] sm:h-[300px] ">
+            <MapContainer style={{ zIndex: 5 }} className="h-full w-full" center={{ lat, lng }} zoom={zoom} scrollWheelZoom={false} dragging={false}  >
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
