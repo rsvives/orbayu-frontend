@@ -14,7 +14,6 @@ import {
     Drawer,
     DrawerClose,
     DrawerContent,
-    DrawerDescription,
     DrawerFooter,
     DrawerHeader,
     DrawerTitle,
@@ -22,8 +21,13 @@ import {
 import { Loader2 } from "lucide-react"
 import { Skeleton } from "./ui/skeleton"
 import { useEffect, useState } from "react"
+import { ChartsSection } from "./charts/ChartsSection"
 
-export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: (open: boolean) => void, data: any }) => {
+
+
+export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: (open: boolean) => void, data: BasicWeatherData | null }) => {
+
+
     const loadingTexts = [
         "Summoning the weather gods...",
         "Convincing the meteorological council...",
@@ -51,10 +55,12 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
                         <DialogDescription className=" py-3">
                         </DialogDescription>
                         {
+
+                            // TODO get data from store/ or use the mutation
                             data === null ? (
                                 <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
                                     <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
-                                </Skeleton>) : (<p>{JSON.stringify(data)}</p>)
+                                </Skeleton>) : (<ChartsSection />)
                         }
                     </DialogHeader>
 
@@ -69,17 +75,17 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
     }
     return (
 
-        < Drawer open={open} onOpenChange={setOpen} >
-            <DrawerContent className="p-4 pt-0">
-                <DrawerHeader className="w-full">
-                    <DrawerTitle>Weather prediction</DrawerTitle>
-                    <DrawerDescription className="py-3">
-                    </DrawerDescription>
+        < Drawer open={open} onOpenChange={setOpen}  >
+            <DrawerContent className="p-4 pt-0 h-[90%]">
+                <DrawerHeader className="w-full pb-1">
+                    <DrawerTitle className="pb-1">Weather prediction</DrawerTitle>
+                    {/* <DrawerDescription className="py-3">
+                    </DrawerDescription> */}
                     {
                         data === null ? (
                             <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
                                 <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
-                            </Skeleton>) : (<p>{JSON.stringify(data)}</p>)
+                            </Skeleton>) : (<ChartsSection />)
                     }
                 </DrawerHeader>
                 <DrawerFooter >
@@ -91,3 +97,4 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
         </Drawer >
     )
 }
+
