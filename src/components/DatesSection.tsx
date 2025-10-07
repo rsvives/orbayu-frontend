@@ -10,57 +10,57 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
-import React from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { toast } from "sonner";
 import { Toggle } from "./ui/toggle";
 import { formatDate } from "@/lib/dates";
+import { useState } from "react";
+import { useDatesStore } from "@/store/datesStore";
 
 
 
-export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { handleCheckWeatherMutation: (date: Date | undefined) => void, mutationPending: boolean }) => {
-    const [open, setOpen] = React.useState(false)
-    const [value, setValue] = React.useState("December 2026")
-    const [date, setDate] = React.useState<Date | undefined>(
-        parseDate(value) || undefined
-    )
-    const [daysRange, setDaysRange] = React.useState("0")
-    const [month, setMonth] = React.useState<Date | undefined>(date)
+export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { handleCheckWeatherMutation: () => void, mutationPending: boolean }) => {
+    const [open, setOpen] = useState(false)
 
-    const handlFeatureNotAvailable = () => {
-        toast('Feature not available yet', {
-            duration: 5000,
-            dismissible: true,
-            action: { label: 'Close', onClick: () => toast.dismiss() }
-        })
+    const { startDate, endDate, setStartDate, setEndDate, updateEndDate, range } = useDatesStore()
+    const maxSelectionDays = () => {
+        if (range === 'day') {
+            return 1
+        }
+        if (range === 'week') {
+            return 7
+        }
+        if (range === 'range') {
+            return 20
+        }
+        if (range === 'month') {
+            return 30
+        }
     }
-
-
-
     return (
-        // <div className='w-auto z-50 absolute bottom-4 left-4 right-4 sm:bottom-8 sm:left-8 sm:right-8 rounded-lg'>
         <div>
-            <Card >
-
-                <CardContent className='flex flex-col gap-4 text-sm'>
-                    <div className="grid sm:flex-row flex-col gap-4">
-                        <div className="flex flex-row gap-2 w-full">
+            <Card className="shadow-none" >
+                <CardContent className='flex flex-col gap-4 text-sm shadow-none'>
+                    <div className="flex sm:flex-row flex-col gap-4">
+                        <div className="flex  flex-row gap-2 w-full">
                             <div className="flex flex-col gap-2 w-full">
                                 <Label htmlFor="date" className="px-1">
-                                    Check Date
+                                    Date
                                 </Label>
                                 <div className="relative flex gap-2 ">
                                     <Input
                                         id="date"
-                                        value={value}
-                                        placeholder="December 2026"
+                                        value={range !== 'day' ? `${formatDate(startDate)} - ${formatDate(endDate)}` : formatDate(startDate)}
+                                        placeholder={formatDate(startDate)}
+                                        onClick={() => {
+                                            setOpen(true)
+                                        }}
                                         className="bg-background pr-10 w-full"
                                         onChange={(e) => {
-                                            setValue(e.target.value)
                                             const date = parseDate(e.target.value)
                                             if (date) {
-                                                setDate(date)
-                                                setMonth(date)
+                                                setStartDate(new Date(date))
+                                                // setMonth(date)
                                             }
                                         }}
                                         onKeyDown={(e) => {
@@ -83,77 +83,129 @@ export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { 
                                         </PopoverTrigger>
                                         <PopoverContent className="w-auto overflow-hidden p-0" align="end">
                                             <Calendar
-                                                mode="single"
-                                                // min={1}
-                                                // max={30}
-                                                selected={date}
-                                                captionLayout="dropdown"
-                                                month={month}
-                                                toYear={new Date().getFullYear() + 10}
-                                                onMonthChange={setMonth}
-                                                onSelect={(date) => {
-                                                    setDate(date)
-                                                    setValue(formatDate(date))
-                                                    setOpen(false)
+                                                mode="range"
+                                                min={1}
+                                                max={maxSelectionDays()}
+                                                selected={{ from: startDate, to: endDate }}
+                                                captionLayout="label"
+                                                month={startDate}
+                                                components={{
+                                                    CaptionLabel: ((date) => {
+                                                        console.log({ date })
+                                                        return (
+                                                            <div className="w-full items-center flex justify-between gap-2">
+                                                                <span className="flex-1">{typeof (date?.children) === 'string' && date?.children?.split(' ')[0]}</span>
+                                                                <TimePeriod />
+                                                            </div>
+                                                        )
+                                                    })
                                                 }}
+                                                onSelect={(date) => {
+                                                    if (date?.from) {
+                                                        setStartDate(new Date(date.from))
+                                                        if (range === 'range' && date?.to) {
+                                                            setEndDate(new Date(date.to))
+                                                        } else {
+                                                            updateEndDate()
+                                                        }
+                                                    }
+                                                    console.log(date)
+                                                }}
+
+                                                onMonthChange={(date) => {
+                                                    setStartDate(date)
+                                                    updateEndDate()
+                                                }}
+
                                             />
                                         </PopoverContent>
                                     </Popover>
                                 </div>
 
                             </div>
-                            <div className="flex flex-col gap-2 w-full">
-                                <Label>Time period</Label>
-                                <div className="flex gap-2 w-full">
-                                    <Select onValueChange={(value) => setDaysRange(value)} defaultValue="0" >
-                                        <SelectTrigger className="w-full" defaultValue="0" >
-                                            <SelectValue placeholder="Select a time period" />
-                                        </SelectTrigger>
-                                        <SelectContent className="w-full">
-                                            <SelectGroup className="w-full">
-                                                {/* <SelectLabel>Fruits</SelectLabel> */}
-                                                <SelectItem value="0" className="w-full" >Day</SelectItem>
-                                                <SelectItem value="7" className="w-full">Week</SelectItem>
-                                                <SelectItem value="30" className="w-full">Month</SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <Label>Weather</Label>
-                            {/* <ToggleGroup type="multiple" variant="outline" > */}
-                            <div className="flex gap-2 flex-wrap">
-                                <Toggle variant={'outline'} defaultPressed value="rain" aria-label="Toggle rain">
-                                    <CloudRain size={32} /> Rain
-                                </Toggle>
-                                <Toggle variant={'outline'} defaultPressed value="temperature" aria-label="Toggle temperature">
-                                    <ThermometerSun size={32} /> Temperature
-                                </Toggle>
-                                <Toggle variant={'outline'} className="cursor-not-allowed opacity-50 text-accent-foreground" value="snow" pressed={false} aria-label="Toggle snow" onClick={handlFeatureNotAvailable}>
-                                    <Snowflake size={32} /> Snow
-                                </Toggle>
-                                <Toggle variant={'outline'} className="cursor-not-allowed opacity-50 text-accent-foreground" value="wind" pressed={false} aria-label="Toggle wind" onClick={handlFeatureNotAvailable}>
-                                    <Wind size={32} /> Wind
-                                </Toggle>
 
-                            </div>
-                            {/* </ToggleGroup> */}
                         </div>
+
 
                     </div>
+                    <WeatherSelector />
 
                     <div className="text-muted-foreground  px-1 text-sm flex items-center justify-between gap-4 flex-wrap ">
-                        <p>You will check the weather on {" "}
-                            <span className="font-medium">{formatDate(date)}</span>.
-                            {+daysRange > 0 && ` for ${daysRange} days`}</p>
+                        {range === 'day' ?
+                            (<p>You will check the weather on {" "}
+                                <span className="font-medium">{formatDate(startDate).split(',')[0]}</span>.
+                            </p>
+                            ) :
+                            (<p>You will check the weather from {" "}
+                                <span className="font-medium">{formatDate(startDate).split(',')[0]} </span>
+                                to <span className="font-medium">{formatDate(endDate).split(',')[0]}</span>.
+                            </p>
+                            )
+                        }
 
-                        <Button disabled={mutationPending} className="ml-auto" onClick={() => handleCheckWeatherMutation(date)}>  {mutationPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
+                        <Button disabled={mutationPending} className="ml-auto" onClick={() => handleCheckWeatherMutation()}>  {mutationPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
                     </div>
                 </CardContent>
 
             </Card >
+        </div >
+    )
+}
+
+const TimePeriod = () => {
+
+    const { range, setRange, updateEndDate } = useDatesStore()
+    return (
+        < div className="flex flex-col gap-2 z-[2]" >
+            {/* <Label>Time period</Label> */}
+            <div className="flex gap-2 w-full">
+                <Select onValueChange={(value: 'day' | 'week' | 'range' | 'month') => {
+                    setRange(value)
+                    updateEndDate()
+                }} defaultValue="day" value={range} >
+                    <SelectTrigger className="w-full" defaultValue={range} >
+                        <SelectValue placeholder="Select a time period" />
+                    </SelectTrigger>
+                    <SelectContent className="w-full">
+                        <SelectGroup className="w-full">
+                            <SelectItem value="day" className="w-full" >Day</SelectItem>
+                            <SelectItem value="week" className="w-full">Week</SelectItem>
+                            <SelectItem value="range" className="w-full">Custom Range</SelectItem>
+                            <SelectItem value="month" className="w-full">Month</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+            </div>
+        </div >
+    )
+}
+
+const WeatherSelector = () => {
+    const handlFeatureNotAvailable = () => {
+        toast('Feature not available yet', {
+            duration: 5000,
+            dismissible: true,
+            action: { label: 'Close', onClick: () => toast.dismiss() }
+        })
+    }
+    return (
+        <div className="flex flex-col gap-2 w-full">
+            <Label>Weather</Label>
+            <div className="flex gap-2 flex-wrap">
+                <Toggle variant={'outline'} defaultPressed value="rain" aria-label="Toggle rain" pressed>
+                    <CloudRain size={32} /> Rain
+                </Toggle>
+                <Toggle variant={'outline'} value="temperature" aria-label="Toggle temperature">
+                    <ThermometerSun size={32} /> Temperature
+                </Toggle>
+                <Toggle variant={'outline'} className="cursor-not-allowed opacity-50 text-accent-foreground" value="snow" pressed={false} aria-label="Toggle snow" onClick={handlFeatureNotAvailable}>
+                    <Snowflake size={32} /> Snow
+                </Toggle>
+                <Toggle variant={'outline'} className="cursor-not-allowed opacity-50 text-accent-foreground" value="wind" pressed={false} aria-label="Toggle wind" onClick={handlFeatureNotAvailable}>
+                    <Wind size={32} /> Wind
+                </Toggle>
+
+            </div>
         </div>
     )
 }
