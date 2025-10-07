@@ -19,35 +19,45 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer"
-import React from "react"
 import { Loader2 } from "lucide-react"
 import { Skeleton } from "./ui/skeleton"
+import { useEffect, useState } from "react"
 
-export const DrawerDialog = ({ open, setOpen }: { open: boolean, setOpen: (open: boolean) => void }) => {
-
-    const loadingTexts = ["Gathering some information...", "Talking to the experts...", "Processing data...", "Analyzing data...", "Generating report..."]
-    const [loadingText, setLoadingText] = React.useState(loadingTexts[0])
+export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: (open: boolean) => void, data: any }) => {
+    const loadingTexts = [
+        "Summoning the weather gods...",
+        "Convincing the meteorological council...",
+        "Crunching some serious numbers...",
+        "Channeling the spirits of forecasting...",
+        "Weaving a tapestry of data...",
+    ]
+    const [loadingText, setLoadingText] = useState(loadingTexts[0])
     const isDesktop = useMediaQuery("(min-width: 768px)")
 
-    React.useEffect(() => {
+    useEffect(() => {
         const interval = setInterval(() => {
             const randomIndex = Math.floor(Math.random() * loadingTexts.length)
             setLoadingText(loadingTexts[randomIndex])
-        }, 2000)
+        }, 2500)
         return () => clearInterval(interval)
-        // eslint-disable-next-line 
     }, [])
+
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={setOpen} modal={true} >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                         <DialogTitle>Weather prediction</DialogTitle >
-                        <DialogDescription className="flex items-center justify-center gap-2 py-3">
-                            <Loader2 className="h-4 w-4 animate-spin" />   <p className="text-sm text-center animate-pulse"> {loadingText}</p>
+                        <DialogDescription className=" py-3">
                         </DialogDescription>
+                        {
+                            data === null ? (
+                                <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
+                                    <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
+                                </Skeleton>) : (<p>{JSON.stringify(data)}</p>)
+                        }
                     </DialogHeader>
-                    <Skeleton className="h-48" />
+
                     <DialogFooter>
                         <DialogClose asChild onClick={() => setOpen(false)}>
                             <Button variant="outline">Cancel</Button>
@@ -58,21 +68,26 @@ export const DrawerDialog = ({ open, setOpen }: { open: boolean, setOpen: (open:
         )
     }
     return (
-        <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerContent className="p-8 pt-0">
-                <DrawerHeader className="text-left">
+
+        < Drawer open={open} onOpenChange={setOpen} >
+            <DrawerContent className="p-4 pt-0">
+                <DrawerHeader className="w-full">
                     <DrawerTitle>Weather prediction</DrawerTitle>
-                    <DrawerDescription className="flex items-center justify-center gap-2 py-3">
-                        <Loader2 className="h-4 w-4 animate-spin" /> <p className="text-sm text-center animate-pulse"> {loadingText}</p>
+                    <DrawerDescription className="py-3">
                     </DrawerDescription>
+                    {
+                        data === null ? (
+                            <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
+                                <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
+                            </Skeleton>) : (<p>{JSON.stringify(data)}</p>)
+                    }
                 </DrawerHeader>
-                <Skeleton className="h-48" />
-                <DrawerFooter className="p-0 mt-4">
+                <DrawerFooter >
                     <DrawerClose asChild>
                         <Button variant="outline" className="w-full">Cancel</Button>
                     </DrawerClose>
                 </DrawerFooter>
             </DrawerContent>
-        </Drawer>
+        </Drawer >
     )
 }
