@@ -5,6 +5,8 @@ import { TemperatureMeanChart } from "./TemperatureMeanChart"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import { CloudRain, ThermometerSun } from "lucide-react"
+import { RainTimeChart } from "./RainTimeChart"
+import { RainQuantityChart } from "./RainQuantityChart"
 
 export const ChartsSection = () => {
     const { weatherData } = useWeatherDataStore()
@@ -12,15 +14,15 @@ export const ChartsSection = () => {
     const chartConfig: ChartConfig = {
 
         meanTemp: {
-            label: 'Mean Temp (ºC)',
+            label: 'Avg Temp(ºC)',
             color: "#000000",
         },
         maxTemp: {
-            label: 'Max Temp (ºC)',
+            label: 'Max Temp(ºC)',
             color: "var(--foreground)",
         },
         minTemp: {
-            label: 'Min Temp (ºC)',
+            label: 'Min Temp(ºC)',
             color: "#AAAAAA",
         }
 
@@ -34,10 +36,20 @@ export const ChartsSection = () => {
         meanTemp: t.mean_temps.reduce((a, b) => a + b) / t.mean_temps.length
     }))
 
-    if (chartData) {
+    const rainData = weatherData?.rain.map((r) => ({
+        year: r.year,
+        hours: r.hours.reduce((a, b) => a + b) / r.hours.length,
+        quantity: r.quantity.reduce((a, b) => a + b) / r.quantity.length
+    }))
+    // console.log({ rainData })
+    const rainQuantityData = rainData?.map((r) => ({ year: r.year, quantity: r.quantity }))
 
+    // console.log(rainHoursData)
+    if (chartData && rainData && rainQuantityData) {
+        const avgHours = rainData?.map((r) => r.hours).reduce((a, b) => a + b, 0) / (rainData?.length || 1)
+        const rainHoursData = [{ hours: avgHours }]
         return (
-            <div className="">
+            <div className="w-full">
                 <ScrollArea className=" overflow-y-scroll flex flex-col gap-1 max-h-[59vh] w-full" type="auto">
 
 
@@ -50,34 +62,32 @@ export const ChartsSection = () => {
                                 <CardContent className="p-2">
                                     <h3>53%</h3>
                                     <span className="text-sm"> possibilities</span>
-                                    {/* <RainChart data={chartData} config={chartConfig} /> */}
                                 </CardContent>
                             </Card>
                             <Card className="shadow-none p-2">
                                 <CardContent className="p-2">
                                     <h3>42l/m^3</h3>
                                     <span className="text-sm"> precipitation</span>
-                                    {/* <RainChart data={chartData} config={chartConfig} /> */}
                                 </CardContent>
                             </Card>
                         </div>
-                        <ScrollArea className="h-[215px] overflow-x-scroll" >
-                            <div className="flex gap-3 ">
+                        <ScrollArea className="h-[220px] overflow-x-scroll" >
+                            <div className="flex gap-3 w-full">
 
-                                <Card className="shadow-none p-4">
+                                <Card className="shadow-none p-4 flex-1">
                                     <CardHeader>
                                         <CardTitle>Rain Hours</CardTitle>
                                     </CardHeader>
                                     <CardContent className="px-4">
-                                        <TemperatureMaxMinChart data={chartData} config={chartConfig} />
+                                        <RainTimeChart data={rainHoursData} config={chartConfig} />
                                     </CardContent>
                                 </Card>
-                                <Card className="shadow-none p-4">
+                                <Card className="shadow-none p-4 flex-1">
                                     <CardHeader>
                                         <CardTitle>Rain Intensity</CardTitle>
                                     </CardHeader>
                                     <CardContent className="px-4">
-                                        <TemperatureMeanChart data={chartData} config={chartConfig} />
+                                        <RainQuantityChart data={rainQuantityData} config={chartConfig} />
                                     </CardContent>
                                 </Card>
 
@@ -97,7 +107,6 @@ export const ChartsSection = () => {
                                     <h3 className="text-lg font-medium">27ºC</h3>
                                     <span className="text-sm leading-0.5 text-accent-foreground"> max</span>
                                     <span className="text-[9px] sm:text-sm"> historic</span>
-                                    {/* <RainChart data={chartData} config={chartConfig} /> */}
                                 </CardContent>
                             </Card>
                             <Card className="shadow-none p-2">
@@ -105,31 +114,28 @@ export const ChartsSection = () => {
                                     <h3 className="text-lg font-medium">9ºC</h3>
                                     <span className="text-sm leading-0.5 text-accent-foreground"> min</span>
                                     <span className="text-[9px] sm:text-sm"> historic</span>
-                                    {/* <RainChart data={chartData} config={chartConfig} /> */}
                                 </CardContent>
                             </Card>
                             <Card className="shadow-none p-2">
                                 <CardContent className="p-2">
                                     <h3 className="text-lg font-medium">17ºC</h3>
                                     <span className="text-sm leading-0.5 text-accent-foreground"> mean</span>
-                                    {/* <RainChart data={chartData} config={chartConfig} /> */}
                                 </CardContent>
                             </Card>
                         </div>
-                        <ScrollArea className="h-[215px] overflow-x-scroll" >
-                            <div className="flex gap-3 ">
-
-                                <Card className="shadow-none p-4">
+                        <ScrollArea className="min-h-[220px] overflow-x-scroll" >
+                            <div className="flex gap-3 w-full">
+                                <Card className="shadow-none p-4 min-w-[280px] flex-1">
                                     <CardHeader>
                                         <CardTitle>Max/Min</CardTitle>
                                     </CardHeader>
-                                    <CardContent className="px-4">
+                                    <CardContent className="px-4 ">
                                         <TemperatureMaxMinChart data={chartData} config={chartConfig} />
                                     </CardContent>
                                 </Card>
-                                <Card className="shadow-none p-4">
+                                <Card className="shadow-none p-4 min-w-[280px] flex-1">
                                     <CardHeader>
-                                        <CardTitle>Mean</CardTitle>
+                                        <CardTitle>Average Temp</CardTitle>
                                     </CardHeader>
                                     <CardContent className="px-4">
                                         <TemperatureMeanChart data={chartData} config={chartConfig} />

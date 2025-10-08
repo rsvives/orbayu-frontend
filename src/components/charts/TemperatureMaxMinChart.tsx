@@ -1,6 +1,6 @@
 
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
-import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 
 export const TemperatureMaxMinChart = ({ data, config }: { data: { year: number, minTemp: number, maxTemp: number }[], config: ChartConfig }) => {
@@ -10,7 +10,7 @@ export const TemperatureMaxMinChart = ({ data, config }: { data: { year: number,
     return (
         <>
 
-            <ChartContainer config={config} className="min-h-[120px] w-full max-h-[200px]">
+            <ChartContainer config={config} className="min-h-[140px] w-full max-h-[200px]">
                 {/* <div className="min-h-[200px]"> */}
                 <AreaChart accessibilityLayer data={data} >
                     <CartesianGrid vertical={false} />
@@ -59,6 +59,7 @@ export const TemperatureMaxMinChart = ({ data, config }: { data: { year: number,
                             formatter={(value: number | string) => Number(value).toFixed(1)}
                         /> */}
                     </Area>
+                    <ChartLegend content={<ChartLegendContent />} />
 
 
 

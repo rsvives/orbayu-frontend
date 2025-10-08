@@ -5,7 +5,7 @@ import { Line } from "recharts"
 export const TemperatureMeanChart = ({ data, config }: { data: { year: number, meanTemp: number }[], config: ChartConfig }) => {
     return (
         <>
-            <ChartContainer config={config} className="min-h-[120px] w-full max-h-[200px]">
+            <ChartContainer config={config} className="min-h-[140px] w-full max-h-[200px]">
                 <LineChart
                     accessibilityLayer
                     data={data}
@@ -15,6 +15,7 @@ export const TemperatureMeanChart = ({ data, config }: { data: { year: number, m
                         right: 12,
                         bottom: 0
                     }}
+
 
                 >
                     <XAxis dataKey='year'
@@ -27,6 +28,8 @@ export const TemperatureMeanChart = ({ data, config }: { data: { year: number, m
                         type="natural"
                         stroke="var(--color-meanTemp)"
                         strokeWidth={2}
+                        min={13}
+                        max={27}
                         dot={{
                             fill: "var(--color-desktop)",
                         }}

@@ -48,29 +48,31 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
 
     if (isDesktop) {
         return (
-            <Dialog open={open} onOpenChange={setOpen} modal={true} >
-                <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
-                        <DialogTitle>Weather prediction</DialogTitle >
-                        <DialogDescription className=" py-3">
-                        </DialogDescription>
-                        {
+            <div className="flex flex-1 w-full">
+                <Dialog open={open} onOpenChange={setOpen} >
+                    <DialogContent className="w-[100%] min-w-[720px] max-w-[800px]" >
+                        <DialogHeader>
+                            <DialogTitle>Weather prediction</DialogTitle >
+                            <DialogDescription className=" py-3">
+                            </DialogDescription>
+                            {
+                                // TODO get data from store/ or use the mutation
+                                data === null ? (
+                                    <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
+                                        <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
+                                    </Skeleton>) : (<ChartsSection />)
+                            }
+                        </DialogHeader>
 
-                            // TODO get data from store/ or use the mutation
-                            data === null ? (
-                                <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
-                                    <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
-                                </Skeleton>) : (<ChartsSection />)
-                        }
-                    </DialogHeader>
+                        <DialogFooter>
+                            <DialogClose asChild onClick={() => setOpen(false)}>
+                                <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                        </DialogFooter>
+                    </DialogContent>
 
-                    <DialogFooter>
-                        <DialogClose asChild onClick={() => setOpen(false)}>
-                            <Button variant="outline">Cancel</Button>
-                        </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                </Dialog>
+            </div>
         )
     }
     return (
