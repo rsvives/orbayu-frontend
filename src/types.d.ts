@@ -13,8 +13,7 @@ type WeatherType = "rain" | "temperature" | "snow" | "wind"
 
 interface BasicWeatherData {
     temps: TemperatureData[],
-
-    rain: RainData
+    rain: RainData[]
 }
 
 type TemperatureData = {
@@ -25,6 +24,7 @@ type TemperatureData = {
 }
 
 type RainData = {
-    hours: [number[]]
-    quantity: [number[]]
+    year: number
+    hours: number[]
+    quantity: number[]
 }
