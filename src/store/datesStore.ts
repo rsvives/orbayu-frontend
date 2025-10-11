@@ -24,7 +24,7 @@ type DatesStore = State & Actions
 
 export const useDatesStore = create<DatesStore>((set, get, store) => ({
     startDate: new Date('2026-06-01'),
-    endDate: new Date('2026-06-01'),
+    endDate: new Date('2026-06-15'),
     range: 'range',
     setRange: (range: 'day' | 'week' | 'range' | 'month') => set({ range }),
     setStartDate: (startDate: Date) => set({ startDate }),
