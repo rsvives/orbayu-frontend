@@ -9,95 +9,56 @@ import { DatesSection } from './DatesSection';
 import { getCurrentLocation, getLocationByCoords, getLocationBySearchQuery } from '@/lib/location';
 import { Map } from './Map';
 import { DrawerDialog } from './DrawerDialog';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { weatherService } from '@/services/weatherService';
 import { formatDate } from '@/lib/dates';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Label } from './ui/label';
 import { useDatesStore } from '@/store/datesStore';
 import { useWeatherDataStore } from '@/store/weatherDataStore';
+import { useLocationStore } from '@/store/locationStore';
+import { useAppStateStore } from '@/store/appStateStore';
 
 export default function LocationMap() {
-    const [location, setLocation] = useState<Coordinates>({ lat: null, lng: null, accuracy: null });
-    // const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [radius, setRadius] = useState(30);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchLoading, setSearchLoading] = useState(false);
-    const [searchError, setSearchError] = useState<string | null>(null);
+
     const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
     const [drawerDialogOpen, setDrawerDialogOpen] = useState(false);
-    // const [weatherData, setWeatherData] = useState<any>(null);
 
+
+    const { setSearchQuery, location, radius, setLocation } = useLocationStore()
+    const { error, setError, setSearchError } = useAppStateStore()
     const { weatherData, setWeatherData } = useWeatherDataStore()
+    const { startDate, endDate } = useDatesStore()
 
     useEffect(() => {
         handleRefresh()
     }, []);
 
-    const { startDate, endDate } = useDatesStore()
-    const mutation = useMutation({
-        mutationFn: async () => await weatherService.getWeather({
+    const weatherCheckData = useQuery({
+        queryKey: ['weather', location.lat, location.lng, radius, startDate, endDate],
+        queryFn: async () => await weatherService.getWeather({
             lat: location.lat,
             lon: location.lng, radius,
             start_date: formatDate(startDate),
             end_date: formatDate(endDate)
         }),
-        onMutate() {
-            setDrawerDialogOpen(true)
-        },
-        onSuccess: async (data) => {
-            console.log("I'm first!", data)
-            setDrawerDialogOpen(true)
-            setWeatherData(data)
-        },
+        enabled: false,
     })
 
-    const handleCheckWeatherMutation = async () => {
-        mutation.mutate()
-    }
-
-
-
-    const handleSearch = async (e: FormEvent) => {
-        e.preventDefault();
-
-        const activeElement = window.document.activeElement
-        if (activeElement instanceof HTMLElement) {
-            activeElement.blur()
+    // Handle success logic when query data changes
+    useEffect(() => {
+        if (weatherCheckData.isFetching) {
+            setDrawerDialogOpen(true)
         }
-        if (!searchQuery.trim()) return;
-
-        setSearchLoading(true);
-        setSearchError(null);
-
-        try {
-            const result = await getLocationBySearchQuery(searchQuery)
-
-            if (result) {
-                setLocation({
-                    lat: parseFloat(result.lat),
-                    lng: parseFloat(result.lon),
-                    accuracy: null
-                });
-                // setLocationName(result.display_name);
-                setSearchQuery(result.display_name);
-                // setSearchQuery('');
-                setError(null);
-            } else {
-                setSearchError('Address not found. Try another search.');
-            }
-        } catch (err) {
-            console.error(err)
-            setSearchError('Error searching for address. Please try again.');
-        } finally {
-            setSearchLoading(false);
+        if (weatherCheckData.data && !weatherCheckData.isFetching && !weatherCheckData.error) {
+            console.log("Weather data loaded successfully!", weatherCheckData.data)
+            setDrawerDialogOpen(true)
+            setWeatherData(weatherCheckData.data)
         }
-    };
+    }, [weatherCheckData.data, weatherCheckData.isFetching, weatherCheckData.error, setWeatherData])
 
     useEffect(() => {
         if (error) {
-            console.log({ erroooooor: error })
             toast.error("Geolocation unavailable", {
                 description: "Please check your device location settings and try again.",
                 classNames: { error: 'bg-red-500 text-white' },
@@ -106,10 +67,8 @@ export default function LocationMap() {
                 cancel: <Button variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
                 action: <Button onClick={handleRefresh}>Retry</Button>
             })
-
         }
     }, [error])
-
 
 
     const handleRefresh = async () => {
@@ -122,7 +81,6 @@ export default function LocationMap() {
             setError(null);
             setSearchError(null);
         } else {
-            // setLoading(true);
             setError(null);
             setSearchQuery('');
             try {
@@ -160,12 +118,6 @@ export default function LocationMap() {
     }
 
 
-    const handleRadiusChange = (value: number[]) => {
-        setRadius(value[0]);
-    }
-    // if (query.isLoading) return <div>...Loading</div>
-    // if (query.isError) return <div>...Error</div>
-    // console.log(query.data) 
     return (
         < div className="max-w-4xl mx-auto" >
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -173,10 +125,10 @@ export default function LocationMap() {
                 {/* Content */}
                 <div className="p-4 pt-2 sm:p-6 flex flex-col gap-4">
                     <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
-                        <LocationCard location={location} handleDrawArea={handleDrawArea} radius={radius} handleRadiusChange={handleRadiusChange} handleSearch={handleSearch} searchQuery={searchQuery} searchLoading={searchLoading} searchError={searchError} setSearchQuery={setSearchQuery} />
+                        <LocationCard handleDrawArea={handleDrawArea} />
                     </div>
                     <div className="space-y-6">
-                        <DatesSection handleCheckWeatherMutation={handleCheckWeatherMutation} mutationPending={mutation.isPending} />
+                        <DatesSection handleCheckWeatherQuery={() => weatherCheckData.refetch()} dataPending={weatherCheckData.isFetching} />
                         <DrawerDialog data={weatherData} open={drawerDialogOpen} setOpen={setDrawerDialogOpen} />
                     </div>
 
@@ -188,8 +140,17 @@ export default function LocationMap() {
     );
 }
 
-const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch, searchQuery, searchLoading, searchError, setSearchQuery, location }: { handleDrawArea: () => void, radius: number, handleRadiusChange: (value: number[]) => void, handleSearch: (e: FormEvent) => void, searchQuery: string, searchLoading: boolean, searchError: string | null, setSearchQuery: (value: string) => void, location: Coordinates }) => {
+const LocationCard = ({ handleDrawArea }: { handleDrawArea: () => void }) => {
+
+    const { location, radius, setRadius } = useLocationStore()
+    const { searchError } = useAppStateStore()
     const isMobile = useMediaQuery('(max-width: 768px)')
+
+
+    const handleRadiusChange = (value: number[]) => {
+        setRadius(value[0]);
+    }
+
     if (isMobile) {
         return (
             <Card className='w-full md:w-1/2 gap-2  shadow-none'>
@@ -200,13 +161,7 @@ const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch
                     </CardTitle>
                 </CardHeader>
                 <CardContent className=' flex flex-col gap-4' >
-                    <SearchBar
-                        searchQuery={searchQuery}
-                        setSearchQuery={setSearchQuery}
-                        handleSearch={handleSearch}
-                        searchLoading={searchLoading}
-
-                    />
+                    <SearchBar />
                     <div className='flex items-center gap-2 justify-between'>
                         <Label>Radius</Label>
                         <h3 className='text-md font-medium text-sm'>{radius} km</h3>
@@ -237,12 +192,7 @@ const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch
 
                     </CardHeader>
                     <CardContent className='px-2' >
-                        <SearchBar
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            handleSearch={handleSearch}
-                            searchLoading={searchLoading}
-                        />
+                        <SearchBar />
                     </CardContent>
                     <CardFooter>
                         {searchError && <p className="text-sm text-red-600 text-center">{searchError}</p>}
@@ -282,7 +232,43 @@ const LocationCard = ({ handleDrawArea, radius, handleRadiusChange, handleSearch
     )
 }
 
-const SearchBar = ({ searchQuery, setSearchQuery, handleSearch, searchLoading }: { searchQuery: string, setSearchQuery: (value: string) => void, handleSearch: (e: FormEvent) => void, searchLoading: boolean }) => {
+const SearchBar = () => {
+    const { searchQuery, setSearchQuery, setLocation } = useLocationStore()
+    const { searchLoading, setSearchError, setSearchLoading, setError } = useAppStateStore()
+    const handleSearch = async (e: FormEvent) => {
+        e.preventDefault();
+
+        const activeElement = window.document.activeElement
+        if (activeElement instanceof HTMLElement) {
+            activeElement.blur()
+        }
+        if (!searchQuery.trim()) return;
+
+        setSearchLoading(true);
+        setSearchError(null);
+
+        try {
+            const result = await getLocationBySearchQuery(searchQuery)
+
+            if (result) {
+                setLocation({
+                    lat: parseFloat(result.lat),
+                    lng: parseFloat(result.lon),
+                    accuracy: null
+                });
+                setSearchQuery(result.display_name);
+                setError(null);
+            } else {
+                setSearchError('Address not found. Try another search.');
+            }
+        } catch (err) {
+            console.error(err)
+            setSearchError('Error searching for address. Please try again.');
+        } finally {
+            setSearchLoading(false);
+        }
+    };
+
     return (
         <form onSubmit={(e) => handleSearch(e)}>
             <div className="flex gap-2">
@@ -292,7 +278,7 @@ const SearchBar = ({ searchQuery, setSearchQuery, handleSearch, searchLoading }:
                             onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search a place, city or location..." />
                     </InputGroup>
                 </div>
-                <Button type="submit" variant={'outline'}>
+                <Button type="submit" variant={'outline'} disabled={searchLoading}>
                     {searchLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Search />}
                 </Button>
             </div>

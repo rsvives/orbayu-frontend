@@ -16,13 +16,16 @@ import { Toggle } from "./ui/toggle";
 import { formatDate } from "@/lib/dates";
 import { useState } from "react";
 import { useDatesStore } from "@/store/datesStore";
+import type { QueryObserverResult } from "@tanstack/react-query";
 
 
 
-export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { handleCheckWeatherMutation: () => void, mutationPending: boolean }) => {
+export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleCheckWeatherQuery: () => Promise<QueryObserverResult<any, Error>>, dataPending: boolean }) => {
     const [open, setOpen] = useState(false)
 
     const { startDate, endDate, setStartDate, setEndDate, updateEndDate, range } = useDatesStore()
+
+    //TODO move this to a general file
     const maxSelectionDays = () => {
         if (range === 'day') {
             return 1
@@ -143,7 +146,7 @@ export const DatesSection = ({ handleCheckWeatherMutation, mutationPending }: { 
                             )
                         }
 
-                        <Button disabled={mutationPending} className="ml-auto" onClick={() => handleCheckWeatherMutation()}>  {mutationPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
+                        <Button disabled={dataPending} className="ml-auto" onClick={() => handleCheckWeatherQuery()}>  {dataPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
                     </div>
                 </CardContent>
 
