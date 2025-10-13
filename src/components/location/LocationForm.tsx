@@ -1,146 +1,19 @@
-import { useState, useEffect, useRef, type FormEvent } from 'react';
-import { MapPin, Loader2, Search, Pencil } from 'lucide-react';
-import { toast } from 'sonner';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { Slider } from './ui/slider';
-import { Button } from './ui/button';
-import { InputGroup, InputGroupInput } from './ui/input-group';
-import { DatesSection } from './DatesSection';
-import { getCurrentLocation, getLocationByCoords, getLocationBySearchQuery } from '@/lib/location';
-import { Map } from './Map';
-import { DrawerDialog } from './DrawerDialog';
-import { useQuery } from '@tanstack/react-query';
-import { weatherService } from '@/services/weatherService';
-import { formatDate } from '@/lib/dates';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { Label } from './ui/label';
-import { useDatesStore } from '@/store/datesStore';
-import { useWeatherDataStore } from '@/store/weatherDataStore';
-import { useLocationStore } from '@/store/locationStore';
-import { useAppStateStore } from '@/store/appStateStore';
+import { useMediaQuery } from "@/hooks/use-media-query"
+import { useAppStateStore } from "@/store/appStateStore"
+import { useLocationStore } from "@/store/locationStore"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card"
+import { Loader2, MapPin, Pencil, Search } from "lucide-react"
+import { Label } from "../ui/label"
+import { Slider } from "../ui/slider"
+import { Map } from "../Map"
+import { InputGroup, InputGroupInput } from "../ui/input-group"
+import { Button } from "../ui/button"
+import { toast } from "sonner"
+import { type FormEvent } from "react"
+import { getLocationBySearchQuery } from "@/lib/location"
 
-export default function LocationMap() {
-
-    const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
-    const [drawerDialogOpen, setDrawerDialogOpen] = useState(false);
-
-
-    const { setSearchQuery, location, radius, setLocation } = useLocationStore()
-    const { error, setError, setSearchError } = useAppStateStore()
-    const { weatherData, setWeatherData } = useWeatherDataStore()
-    const { startDate, endDate } = useDatesStore()
-
-    useEffect(() => {
-        handleRefresh()
-    }, []);
-
-    const weatherCheckData = useQuery({
-        queryKey: ['weather', location.lat, location.lng, radius, startDate, endDate],
-        queryFn: async () => await weatherService.getWeather({
-            lat: location.lat,
-            lon: location.lng, radius,
-            start_date: formatDate(startDate),
-            end_date: formatDate(endDate)
-        }),
-        enabled: false,
-    })
-
-    // Handle success logic when query data changes
-    useEffect(() => {
-        if (weatherCheckData.isFetching) {
-            setDrawerDialogOpen(true)
-        }
-        if (weatherCheckData.data && !weatherCheckData.isFetching && !weatherCheckData.error) {
-            console.log("Weather data loaded successfully!", weatherCheckData.data)
-            setDrawerDialogOpen(true)
-            setWeatherData(weatherCheckData.data)
-        }
-    }, [weatherCheckData.data, weatherCheckData.isFetching, weatherCheckData.error, setWeatherData])
-
-    useEffect(() => {
-        if (error) {
-            toast.error("Geolocation unavailable", {
-                description: "Please check your device location settings and try again.",
-                classNames: { error: 'bg-red-500 text-white' },
-                duration: 10000,
-                dismissible: true,
-                cancel: <Button variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
-                action: <Button onClick={handleRefresh}>Retry</Button>
-            })
-        }
-    }, [error])
-
-
-    const handleRefresh = async () => {
-        console.log('refresh')
-        if (initialLocation.current?.lat && initialLocation.current?.lng) {
-            setLocation(initialLocation.current);
-            const locationName = await getLocationByCoords({ lat: initialLocation.current.lat, lon: initialLocation.current.lng })
-            console.log(initialLocation.current, locationName)
-            setSearchQuery('');
-            setError(null);
-            setSearchError(null);
-        } else {
-            setError(null);
-            setSearchQuery('');
-            try {
-                const currentLocation = await getCurrentLocation()
-                if (currentLocation) {
-                    console.log('current')
-                    initialLocation.current = currentLocation;
-                    setLocation(currentLocation);
-                    console.log(currentLocation)
-                    const locationName = await getLocationByCoords({ lat: currentLocation.lat, lon: currentLocation.lng })
-                    console.log(initialLocation.current, { locationName })
-
-                    setSearchQuery(locationName.display_name);
-                    // setLoading(false);
-                }
-            }
-            catch (err) {
-                console.error({ err })
-                if (err instanceof Error) {
-                    setError(err.message);
-
-                }
-                // setLoading(false);
-            }
-
-        }
-    };
-
-    const handleDrawArea = () => {
-        toast('Feature not available yet', {
-            duration: 5000,
-            dismissible: true,
-            action: { label: 'Close', onClick: () => toast.dismiss() }
-        })
-    }
-
-
-    return (
-        < div className="max-w-4xl mx-auto" >
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-
-                {/* Content */}
-                <div className="p-4 pt-2 sm:p-6 flex flex-col gap-4">
-                    <div className='flex gap-4 flex-wrap sm:flex-nowrap'>
-                        <LocationCard handleDrawArea={handleDrawArea} />
-                    </div>
-                    <div className="space-y-6">
-                        <DatesSection handleCheckWeatherQuery={() => weatherCheckData.refetch()} dataPending={weatherCheckData.isFetching} />
-                        <DrawerDialog data={weatherData} open={drawerDialogOpen} setOpen={setDrawerDialogOpen} />
-                    </div>
-
-                </div>
-            </div>
-
-
-        </div >
-    );
-}
-
-const LocationCard = ({ handleDrawArea }: { handleDrawArea: () => void }) => {
+export const LocationForm = () => {
+    // const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
 
     const { location, radius, setRadius } = useLocationStore()
     const { searchError } = useAppStateStore()
@@ -150,6 +23,21 @@ const LocationCard = ({ handleDrawArea }: { handleDrawArea: () => void }) => {
     const handleRadiusChange = (value: number[]) => {
         setRadius(value[0]);
     }
+
+    const handleDrawArea = () => {
+        toast('Feature not available yet', {
+            duration: 5000,
+            dismissible: true,
+            action: { label: 'Close', onClick: () => toast.dismiss() }
+        })
+    }
+
+    // const locationData = useQuery({
+    //     queryKey: ['location', location.lat, location.lng],
+    //     queryFn: async () => await getLocationByCoords({ lat: location.lat!, lon: location.lng! }),
+    //     enabled: false,
+    // })
+
 
     if (isMobile) {
         return (
@@ -231,6 +119,7 @@ const LocationCard = ({ handleDrawArea }: { handleDrawArea: () => void }) => {
         </div >
     )
 }
+
 
 const SearchBar = () => {
     const { searchQuery, setSearchQuery, setLocation } = useLocationStore()
