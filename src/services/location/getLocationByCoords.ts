@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: number }) => {
+export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: number }): Promise<LocationType> => {
 
     const response = await axios.get(
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=8&addressdetails=1`,
@@ -15,5 +15,14 @@ export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: numb
     )
     const data = await response.data;
     console.log('function', { getLocationByCoords: data })
-    return data
+    const location = {
+        name: data.display_name,
+        coords: {
+            lat: data.lat,
+            lng: data.lon,
+            accuracy: data.accuracy || null
+        }
+    }
+
+    return location
 }

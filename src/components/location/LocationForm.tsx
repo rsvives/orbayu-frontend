@@ -9,8 +9,8 @@ import { Map } from "../Map"
 import { InputGroup, InputGroupInput } from "../ui/input-group"
 import { Button } from "../ui/button"
 import { toast } from "sonner"
-import { type FormEvent } from "react"
-import { getLocationBySearchQuery } from "@/lib/location"
+import { useEffect, type FormEvent } from "react"
+
 
 export const LocationForm = () => {
     // const initialLocation = useRef<{ lat: number | null, lng: number | null, accuracy: number | null } | null>(null);
@@ -31,13 +31,6 @@ export const LocationForm = () => {
             action: { label: 'Close', onClick: () => toast.dismiss() }
         })
     }
-
-    // const locationData = useQuery({
-    //     queryKey: ['location', location.lat, location.lng],
-    //     queryFn: async () => await getLocationByCoords({ lat: location.lat!, lon: location.lng! }),
-    //     enabled: false,
-    // })
-
 
     if (isMobile) {
         return (
@@ -61,7 +54,7 @@ export const LocationForm = () => {
 
                 <CardFooter>
                     <div className="overflow-hidden rounded-xl w-full">
-                        <Map lat={location.lat} lng={location.lng} radius={radius} />
+                        <Map lat={location?.coords.lat} lng={location?.coords.lng} radius={radius} />
                     </div>
                 </CardFooter>
             </Card>
@@ -113,7 +106,7 @@ export const LocationForm = () => {
 
             </div>
             <div className='w-full overflow-hidden rounded-xl'>
-                <Map lat={location.lat} lng={location.lng} radius={radius} />
+                <Map lat={location?.coords?.lat} lng={location?.coords?.lng} radius={radius} />
 
             </div>
         </div >
@@ -122,8 +115,12 @@ export const LocationForm = () => {
 
 
 const SearchBar = () => {
-    const { searchQuery, setSearchQuery, setLocation } = useLocationStore()
-    const { searchLoading, setSearchError, setSearchLoading, setError } = useAppStateStore()
+    const { searchQuery, location, setSearchQuery, setLocation, setShouldSearch } = useLocationStore()
+    const { searchLoading, setSearchError, setSearchLoading } = useAppStateStore()
+
+    // const [shouldSearch, setShouldSearch] = useState(false)
+
+
     const handleSearch = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -131,32 +128,58 @@ const SearchBar = () => {
         if (activeElement instanceof HTMLElement) {
             activeElement.blur()
         }
-        if (!searchQuery.trim()) return;
+        if (!searchQuery.trim()) return
 
-        setSearchLoading(true);
-        setSearchError(null);
 
-        try {
-            const result = await getLocationBySearchQuery(searchQuery)
+        //TODO remove this
+        setSearchLoading(true)
+        setSearchError(null)
 
-            if (result) {
-                setLocation({
-                    lat: parseFloat(result.lat),
-                    lng: parseFloat(result.lon),
-                    accuracy: null
-                });
-                setSearchQuery(result.display_name);
-                setError(null);
-            } else {
-                setSearchError('Address not found. Try another search.');
-            }
-        } catch (err) {
-            console.error(err)
-            setSearchError('Error searching for address. Please try again.');
-        } finally {
-            setSearchLoading(false);
-        }
+
+        setShouldSearch(true)
+
+        // try {
+        //     const result = await getLocationBySearchQuery(searchQuery)
+
+        //     if (result) {
+        //         setLocation({
+        //             lat: parseFloat(result.lat),
+        //             lng: parseFloat(result.lon),
+        //             accuracy: null
+        //         });
+        //         setSearchQuery(result.display_name);
+        //         setError(null);
+        //     } else {
+        //         setSearchError('Address not found. Try another search.');
+        //     }
+        // } catch (err) {
+        //     console.error(err)
+        //     setSearchError('Error searching for address. Please try again.');
+        // } finally {
+        //     setSearchLoading(false);
+        // }
+
     };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('change', e.target.value)
+        if (e.target.value.trim() === '') {
+            setLocation(null)
+            setSearchQuery('')
+        }
+        setShouldSearch(false)
+        setSearchQuery(e.target.value)
+    }
+
+    useEffect(() => {
+        if (location) {
+            // setLocation(location)
+            // setSearchLoading(false)
+            setShouldSearch(false)
+            setSearchQuery(location?.name || '')
+        }
+    }, [location])
+
 
     return (
         <form onSubmit={(e) => handleSearch(e)}>
@@ -164,7 +187,7 @@ const SearchBar = () => {
                 <div className="flex-1 relative">
                     <InputGroup>
                         <InputGroupInput type='search' value={searchQuery} enterKeyHint='search'
-                            onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search a place, city or location..." />
+                            onChange={handleChange} placeholder="Search a place, city or location..." />
                     </InputGroup>
                 </div>
                 <Button type="submit" variant={'outline'} disabled={searchLoading}>

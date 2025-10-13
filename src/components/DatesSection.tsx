@@ -18,8 +18,8 @@ import { useState } from "react";
 import { useDatesStore } from "@/store/datesStore";
 import type { QueryObserverResult } from "@tanstack/react-query";
 
-
-
+//TODO fix any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleCheckWeatherQuery: () => Promise<QueryObserverResult<any, Error>>, dataPending: boolean }) => {
     const [open, setOpen] = useState(false)
 

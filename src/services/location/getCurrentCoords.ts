@@ -1,4 +1,4 @@
-export const getCurrentLocation = async (): Promise<{ lat: number, lng: number, accuracy: number }> => {
+export const getCurrentCoords = async (): Promise<Coordinates> => {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
             reject(new Error('Geolocalización no disponible'));
@@ -8,7 +8,7 @@ export const getCurrentLocation = async (): Promise<{ lat: number, lng: number, 
             (position) => resolve({
                 lat: position.coords.latitude,
                 lng: position.coords.longitude,
-                accuracy: position.coords.accuracy || 0
+                accuracy: position.coords.accuracy
             }),
             (error) => reject(error)
         );

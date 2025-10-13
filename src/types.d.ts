@@ -5,9 +5,9 @@ type Coordinates = {
     // radius: number;  
 }
 
-type Location = {
-    name: string;
-    coordinates: Coordinates;
+type LocationType = {
+    name: string | null;
+    coords: Coordinates;
 }
 type WeatherType = "rain" | "temperature" | "snow" | "wind"
 
