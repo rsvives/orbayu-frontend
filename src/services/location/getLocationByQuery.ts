@@ -14,7 +14,7 @@ export const getLocationBySearchQuery = async (query: string) => {
         })
 
     const [data] = await response.data;
-    console.log('function', { getlocationBySearch: data })
+    // console.log('function', { getlocationBySearch: data })
     return {
         name: data.display_name,
         coords: {

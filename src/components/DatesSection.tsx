@@ -20,7 +20,7 @@ import type { QueryObserverResult } from "@tanstack/react-query";
 
 //TODO fix any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleCheckWeatherQuery: () => Promise<QueryObserverResult<any, Error>>, dataPending: boolean }) => {
+export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleCheckWeatherQuery: () => void | Promise<QueryObserverResult<any, Error>>, dataPending: boolean }) => {
     const [open, setOpen] = useState(false)
 
     const { startDate, endDate, setStartDate, setEndDate, updateEndDate, range } = useDatesStore()
@@ -94,7 +94,7 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
                                                 month={startDate}
                                                 components={{
                                                     CaptionLabel: ((date) => {
-                                                        console.log({ date })
+                                                        // console.log({ date })
                                                         return (
                                                             <div className="w-full items-center flex justify-between gap-2">
                                                                 <span className="flex-1">{typeof (date?.children) === 'string' && date?.children?.split(' ')[0]}</span>
@@ -112,7 +112,7 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
                                                             updateEndDate()
                                                         }
                                                     }
-                                                    console.log(date)
+                                                    // console.log(date)
                                                 }}
 
                                                 onMonthChange={(date) => {

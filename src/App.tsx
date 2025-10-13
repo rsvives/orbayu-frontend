@@ -4,7 +4,7 @@ import { DatesSection } from './components/DatesSection'
 import { DrawerDialog } from './components/DrawerDialog'
 import { LocationSection } from './components/location/LocationSection'
 import { Button } from './components/ui/button'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { formatDate } from './lib/dates'
 import { weatherService } from './services/weatherService'
 import { useQuery } from '@tanstack/react-query'
@@ -18,7 +18,19 @@ import { useLocationBySearch } from './hooks/location/useLocationBySearch'
 
 
 function App() {
+  const usedValues = useRef<{
+    location: LocationType | null;
+    radius: number | null;
+    startDate: Date | null;
+    endDate: Date | null;
+  }>({
+    location: null,
+    radius: null,
+    startDate: null,
+    endDate: null,
+  })
   const [drawerDialogOpen, setDrawerDialogOpen] = useState(false)
+
 
 
   const { searchQuery, shouldSearch, location, radius, setLocation } = useLocationStore()
@@ -37,13 +49,38 @@ function App() {
     enabled: false,
   })
 
+  const checkValuesChanged = () => {
+    return usedValues.current.location === location &&
+      usedValues.current.radius === radius &&
+      usedValues.current.startDate === startDate &&
+      usedValues.current.endDate === endDate
+  }
+
+  const handleCheckWeatherQuery = () => {
+    if (usedValues.current.location === location &&
+      usedValues.current.radius === radius &&
+      usedValues.current.startDate === startDate &&
+      usedValues.current.endDate === endDate) {
+      setDrawerDialogOpen(true)
+    } else {
+      usedValues.current = {
+        location: location || null,
+        radius: radius || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      }
+      weatherCheckData.refetch()
+    }
+  }
+
+
   // Handle success logic when query data changes
   useEffect(() => {
     if (weatherCheckData.isFetching) {
       setDrawerDialogOpen(true)
     }
     if (weatherCheckData.data && !weatherCheckData.isFetching && !weatherCheckData.error) {
-      console.log("Weather data loaded successfully!", weatherCheckData.data)
+      // console.log("Weather data loaded successfully!", weatherCheckData.data)
       setDrawerDialogOpen(true)
       setWeatherData(weatherCheckData.data)
     }
@@ -82,7 +119,7 @@ function App() {
   } = useLocationBySearch(searchQuery, shouldSearch)
 
 
-  const displayLocation = searchLocation
+  // const displayLocation = searchLocation || autoLocation 
   const displayError = searchError || autoError || geoError
 
   useEffect(() => {
@@ -101,7 +138,7 @@ function App() {
     }
 
     setSearchLoading(searchIsFetching)
-    console.log({ displayLocation }, { displayError })
+    // console.log({ displayLocation }, { displayError })
   }, [searchLocation, displayError, searchIsFetching])
 
   return (
@@ -111,7 +148,7 @@ function App() {
           <div className="p-4 pt-2 sm:p-6 flex flex-col gap-4" >
             <LocationSection />
             <div className="space-y-6">
-              <DatesSection handleCheckWeatherQuery={() => weatherCheckData.refetch()} dataPending={weatherCheckData.isFetching} />
+              <DatesSection handleCheckWeatherQuery={handleCheckWeatherQuery} dataPending={weatherCheckData.isFetching} />
               <DrawerDialog data={weatherData} open={drawerDialogOpen} setOpen={setDrawerDialogOpen} />
             </div>
           </div >

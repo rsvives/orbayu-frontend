@@ -162,7 +162,7 @@ const SearchBar = () => {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('change', e.target.value)
+        // console.log('change', e.target.value)
         if (e.target.value.trim() === '') {
             setLocation(null)
             setSearchQuery('')
