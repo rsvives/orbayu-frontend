@@ -6,7 +6,6 @@ export const Logo = () => {
         <div className="flex items-center gap-2">
             <Isotype />
             <LogoLettering />
-            {/* <span>Monzoon</span> */}
         </div>
     )
 }
