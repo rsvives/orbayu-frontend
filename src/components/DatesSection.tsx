@@ -17,13 +17,17 @@ import { formatDate } from "@/lib/dates";
 import { useState } from "react";
 import { useDatesStore } from "@/store/datesStore";
 import type { QueryObserverResult } from "@tanstack/react-query";
+import { useAppStateStore } from "@/store/appStateStore";
+import { useLocationStore } from "@/store/locationStore";
 
 //TODO fix any
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleCheckWeatherQuery: () => void | Promise<QueryObserverResult<any, Error>>, dataPending: boolean }) => {
     const [open, setOpen] = useState(false)
 
+    const { location } = useLocationStore()
     const { startDate, endDate, setStartDate, setEndDate, updateEndDate, range } = useDatesStore()
+    const { error } = useAppStateStore()
 
     //TODO move this to a general file
     const maxSelectionDays = () => {
@@ -39,6 +43,15 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
         if (range === 'month') {
             return 30
         }
+    }
+
+    const clickFunction = () => {
+        if (!location) {
+            throw new Error('Please select a location')
+        }
+
+        return handleCheckWeatherQuery
+
     }
     return (
         <div>
@@ -146,7 +159,7 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
                             )
                         }
 
-                        <Button disabled={dataPending} className="ml-auto" onClick={() => handleCheckWeatherQuery()}>  {dataPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
+                        <Button disabled={dataPending || !location || error !== null} className="ml-auto" onClick={() => clickFunction()}>  {dataPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
                     </div>
                 </CardContent>
 

@@ -15,6 +15,7 @@ import { useDatesStore } from './store/datesStore'
 import { useGeolocation } from './hooks/location/useGeolocation'
 import { useLocationByCoords } from './hooks/location/useLocationByCoords'
 import { useLocationBySearch } from './hooks/location/useLocationBySearch'
+import { useErrorHandler } from './hooks/useErrorHandler'
 
 
 function App() {
@@ -57,10 +58,7 @@ function App() {
   }
 
   const handleCheckWeatherQuery = () => {
-    if (usedValues.current.location === location &&
-      usedValues.current.radius === radius &&
-      usedValues.current.startDate === startDate &&
-      usedValues.current.endDate === endDate) {
+    if (checkValuesChanged()) {
       setDrawerDialogOpen(true)
     } else {
       usedValues.current = {
@@ -80,23 +78,27 @@ function App() {
       setDrawerDialogOpen(true)
     }
     if (weatherCheckData.data && !weatherCheckData.isFetching && !weatherCheckData.error) {
-      // console.log("Weather data loaded successfully!", weatherCheckData.data)
-      setDrawerDialogOpen(true)
       setWeatherData(weatherCheckData.data)
+    }
+    if (weatherCheckData.error) {
+      console.log(weatherCheckData.error)
+      const { message } = useErrorHandler(weatherCheckData.error as any)
+      setError(new Error(message))
+      setDrawerDialogOpen(false)
     }
   }, [weatherCheckData.data, weatherCheckData.isFetching, weatherCheckData.error, setWeatherData])
 
   // Error handler
   useEffect(() => {
     if (error) {
-      toast.error("Geolocation unavailable", {
-        description: "Please check your device location settings and try again.",
-        classNames: { error: 'bg-red-500 text-white' },
+      const { message, description } = useErrorHandler(error)
+      toast.error(message, {
+        description: description,
+        className: 'sm:min-w-[420px] flex gap-4',
+        richColors: true,
         duration: 10000,
         dismissible: true,
-        cancel: <Button variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
-        // action: <Button onClick={handleRefresh}>Retry</Button>
-        // action: <Button onClick={() => { }}>Retry</Button>
+        cancel: <Button className='ml-auto' variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
       })
     }
   }, [error])
@@ -119,6 +121,7 @@ function App() {
   } = useLocationBySearch(searchQuery, shouldSearch)
 
 
+
   // const displayLocation = searchLocation || autoLocation 
   const displayError = searchError || autoError || geoError
 
@@ -132,7 +135,7 @@ function App() {
     }
 
     if (displayError) {
-      setError(displayError.message)
+      setError(displayError)
     } else {
       setError(null)
     }
