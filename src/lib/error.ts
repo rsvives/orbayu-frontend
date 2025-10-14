@@ -1,6 +1,6 @@
-import { AxiosError } from "axios";
+import { AxiosError } from "axios"
 
-export const useErrorHandler = (error: Error | AxiosError | GeolocationPositionError): { message: string, description: string } => {
+export const errorHandler = (error: Error | AxiosError | GeolocationPositionError): { message: string, description: string } => {
 
     let message = ""
     let description = ""

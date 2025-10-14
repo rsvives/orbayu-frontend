@@ -15,7 +15,7 @@ import { useDatesStore } from './store/datesStore'
 import { useGeolocation } from './hooks/location/useGeolocation'
 import { useLocationByCoords } from './hooks/location/useLocationByCoords'
 import { useLocationBySearch } from './hooks/location/useLocationBySearch'
-import { useErrorHandler } from './hooks/useErrorHandler'
+import { errorHandler } from './lib/error'
 
 
 function App() {
@@ -82,7 +82,7 @@ function App() {
     }
     if (weatherCheckData.error) {
       console.log(weatherCheckData.error)
-      const { message } = useErrorHandler(weatherCheckData.error as any)
+      const { message } = errorHandler(weatherCheckData.error)
       setError(new Error(message))
       setDrawerDialogOpen(false)
     }
@@ -91,7 +91,7 @@ function App() {
   // Error handler
   useEffect(() => {
     if (error) {
-      const { message, description } = useErrorHandler(error)
+      const { message, description } = errorHandler(error)
       toast.error(message, {
         description: description,
         className: 'sm:min-w-[420px] flex gap-4',
