@@ -17,7 +17,7 @@ import { formatDate } from "@/lib/dates";
 import { useState } from "react";
 import { useDatesStore } from "@/store/datesStore";
 import type { QueryObserverResult } from "@tanstack/react-query";
-import { useAppStateStore } from "@/store/appStateStore";
+
 import { useLocationStore } from "@/store/locationStore";
 
 //TODO fix any
@@ -27,7 +27,6 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
 
     const { location } = useLocationStore()
     const { startDate, endDate, setStartDate, setEndDate, updateEndDate, range } = useDatesStore()
-    const { error } = useAppStateStore()
 
     //TODO move this to a general file
     const maxSelectionDays = () => {
@@ -50,7 +49,7 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
             throw new Error('Please select a location')
         }
 
-        return handleCheckWeatherQuery
+        handleCheckWeatherQuery()
 
     }
     return (
@@ -159,7 +158,7 @@ export const DatesSection = ({ handleCheckWeatherQuery, dataPending }: { handleC
                             )
                         }
 
-                        <Button disabled={dataPending || !location || error !== null} className="ml-auto" onClick={() => clickFunction()}>  {dataPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
+                        <Button disabled={dataPending || !location} className="ml-auto" onClick={() => clickFunction()}>  {dataPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Check Weather!'}</Button>
                     </div>
                 </CardContent>
 

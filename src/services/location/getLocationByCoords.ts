@@ -26,7 +26,6 @@ export const getLocationByCoords = async ({ lat, lon }: { lat: number, lon: numb
         }
 
         const data = await response.data;
-        // console.log('function', { getLocationByCoords: data })
 
         const location = {
             name: data.display_name,

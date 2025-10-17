@@ -1,17 +1,22 @@
 import { Label, PolarGrid, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
 import { ChartContainer, type ChartConfig } from "../ui/chart"
+import { getRainIntensity } from "@/lib/precipitation"
 
-export const RainTimeChart = ({ data, config }: { data: { hours: number }[], config: ChartConfig }) => {
+export const RainTimeChart = ({ data, config }: { data: number, config: ChartConfig }) => {
 
     // const avg = data.reduce((acc, item) => acc + item.hours, 0) / data.length
+    const { interval, rainIntensityIntervals } = getRainIntensity(data)
 
+    const keys = Object.entries(rainIntensityIntervals).sort((a, b) => a[1] - b[1]).map(([k]) => k)
+    // const actualKey = 5
+    const actualKey = keys.findIndex(i => i === interval)
     return (
         <>
-            <ChartContainer config={config} className="min-h-[80px] w-full max-h-[130px] aspect-square mx-auto">
+            <ChartContainer config={config} className="min-h-[80px] w-full max-h-[150px] aspect-square mx-auto">
                 <RadialBarChart
-                    data={data}
-                    startAngle={0}
-                    endAngle={data[0].hours / 24 * 360}
+                    data={[{ data: actualKey }]}
+                    startAngle={270}
+                    endAngle={270 - ((actualKey) / keys.length) * 360}
                     innerRadius={60}
                     outerRadius={75}
 
@@ -23,7 +28,7 @@ export const RainTimeChart = ({ data, config }: { data: { hours: number }[], con
                         className="first:fill-muted last:fill-background"
                         polarRadius={[63, 56]}
                     />
-                    <RadialBar dataKey="hours" background cornerRadius={10} />
+                    <RadialBar dataKey="data" background cornerRadius={10} />
                     <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                         <Label
                             content={({ viewBox }) => {
@@ -38,23 +43,22 @@ export const RainTimeChart = ({ data, config }: { data: { hours: number }[], con
                                             <tspan
                                                 x={viewBox.cx}
                                                 y={(viewBox.cy || 0) - 4}
-                                                className="fill-foreground text-2xl font-bold"
+                                                className="fill-foreground text-2xl font-medium"
                                             >
-                                                {((data[0].hours / 24) * 100).toFixed(1)}%
+                                                {interval}
                                             </tspan>
                                             <tspan
                                                 x={viewBox.cx}
                                                 y={(viewBox.cy || 0) + 20}
                                                 className="fill-muted-foreground"
                                             >
-                                                {data[0].hours.toFixed(1)} of 24
+
                                             </tspan>
                                             <tspan
                                                 x={viewBox.cx}
                                                 y={(viewBox.cy || 0) + 36}
                                                 className="fill-muted-foreground"
                                             >
-                                                hours/day
                                             </tspan>
                                         </text>
                                     )
