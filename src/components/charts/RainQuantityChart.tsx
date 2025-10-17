@@ -22,7 +22,7 @@ export const RainQuantityChart = ({ data, config }: { data: { year: number, quan
                     />
                     <ChartTooltip
                         cursor={false}
-                        content={<ChartTooltipContent formatter={(value) => (Number(value) * 100000).toFixed(1)} hideLabel />}
+                        content={<ChartTooltipContent formatter={(value) => (Number(value) * 3600).toFixed(Number(value) * 3600 < 0.1 ? 2 : 1) + ' mm/h'} hideLabel />}
                     />
                     <Bar dataKey="quantity" fill="var(--color-desktop)" radius={8}>
                         <LabelList
@@ -30,7 +30,7 @@ export const RainQuantityChart = ({ data, config }: { data: { year: number, quan
                             offset={12}
                             className="fill-foreground"
                             fontSize={12}
-                            formatter={(value: number) => Number(value * 100000).toFixed(1)}
+                            formatter={(value: number) => Number(value * 3600).toFixed(Number(value) * 3600 < 0.1 ? 2 : 1)}
                         />
                     </Bar>
                 </BarChart>

@@ -25,7 +25,7 @@ import { ChartsSection } from "./charts/ChartsSection"
 
 
 
-export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: (open: boolean) => void, data: BasicWeatherData | null }) => {
+export const DrawerDialog = ({ open, setOpen, data, fetchingData }: { open: boolean, setOpen: (open: boolean) => void, data: BasicWeatherData | null, fetchingData: boolean }) => {
 
 
     const loadingTexts = [
@@ -50,14 +50,14 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
         return (
             <div className="flex flex-1 w-full">
                 <Dialog open={open} onOpenChange={setOpen} >
-                    <DialogContent className="w-[100%] min-w-[720px] max-w-[800px]" >
+                    <DialogContent className="w-[100%] min-w-[720px] max-w-[800px]" aria-label="Weather prediction">
                         <DialogHeader>
                             <DialogTitle>Weather prediction</DialogTitle >
-                            <DialogDescription className=" py-3">
+                            <DialogDescription className=" py-3" aria-describedby="weather data">
                             </DialogDescription>
                             {
                                 // TODO get data from store/ or use the mutation
-                                data === null ? (
+                                data === null || fetchingData ? (
                                     <Skeleton className="h-64 w-full flex flex-col items-center justify-center gap-4" >
                                         <Loader2 className="h-8 w-8 animate-spin" />   <span className="text-sm text-center animate-pulse"> {loadingText}</span>
                                     </Skeleton>) : (<ChartsSection />)
@@ -78,7 +78,7 @@ export const DrawerDialog = ({ open, setOpen, data }: { open: boolean, setOpen: 
     return (
 
         < Drawer open={open} onOpenChange={setOpen}  >
-            <DrawerContent className="p-4 pt-0 h-[90%]">
+            <DrawerContent className="p-4 pt-0 h-[90%]" aria-describedby="weather data">
                 <DrawerHeader className="w-full pb-1">
                     <DrawerTitle className="pb-1">Weather prediction</DrawerTitle>
                     {/* <DrawerDescription className="py-3">

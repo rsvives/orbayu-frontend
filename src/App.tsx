@@ -1,11 +1,167 @@
+import { toast } from 'sonner'
 import './App.css'
-import MapTest from './components/MapTest'
+import { DatesSection } from './components/DatesSection'
+import { DrawerDialog } from './components/DrawerDialog'
+import { LocationSection } from './components/location/LocationSection'
+import { Button } from './components/ui/button'
+import { useEffect, useRef, useState } from 'react'
+import { formatDate } from './lib/dates'
+import { healthCheckService, weatherService } from './services/weatherService'
+import { useQuery } from '@tanstack/react-query'
+import { useLocationStore } from './store/locationStore'
+import { useAppStateStore } from './store/appStateStore'
+import { useWeatherDataStore } from './store/weatherDataStore'
+import { useDatesStore } from './store/datesStore'
+import { useGeolocation } from './hooks/location/useGeolocation'
+import { useLocationByCoords } from './hooks/location/useLocationByCoords'
+import { useLocationBySearch } from './hooks/location/useLocationBySearch'
+import { errorHandler } from './lib/error'
+
 
 function App() {
+  const usedValues = useRef<{
+    location: LocationType | null;
+    radius: number | null;
+    startDate: Date | null;
+    endDate: Date | null;
+  }>({
+    location: null,
+    radius: null,
+    startDate: null,
+    endDate: null,
+  })
+  const [drawerDialogOpen, setDrawerDialogOpen] = useState(false)
+
+  const { searchQuery, shouldSearch, location, radius, setLocation } = useLocationStore()
+  const { error, setError, setSearchLoading } = useAppStateStore()
+  const { weatherData, setWeatherData } = useWeatherDataStore()
+  const { startDate, endDate } = useDatesStore()
+
+  useEffect(() => {
+    healthCheckService.getHealthCheck()
+  }, [])
+
+  const weatherCheckData = useQuery({
+    queryKey: ['weather', { latitude: location?.coords?.lat, longitude: location?.coords?.lng, radius, startDate, endDate }],
+    queryFn: async () => await weatherService.getWeather({
+      lat: location?.coords?.lat,
+      lon: location?.coords?.lng, radius,
+      start_date: formatDate(startDate),
+      end_date: formatDate(endDate)
+    }),
+    enabled: false,
+
+  })
+
+  const checkValuesChanged = () => {
+    return (usedValues.current.location === location &&
+      usedValues.current.radius === radius &&
+      usedValues.current.startDate === startDate &&
+      usedValues.current.endDate === endDate)
+  }
+
+  const handleCheckWeatherQuery = () => {
+    if (checkValuesChanged()) {
+      setDrawerDialogOpen(true)
+    } else {
+      usedValues.current = {
+        location: location || null,
+        radius: radius || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
+      }
+      weatherCheckData.refetch()
+    }
+  }
+
+
+
+  // Handle success logic when query data changes
+  useEffect(() => {
+    if (weatherCheckData.isFetching) {
+      setDrawerDialogOpen(true)
+    }
+    if (weatherCheckData.data && !weatherCheckData.isFetching && !weatherCheckData.error) {
+      setWeatherData(weatherCheckData.data)
+      setDrawerDialogOpen(true)
+    }
+    if (weatherCheckData.error) {
+      console.log(weatherCheckData.error)
+      const { message } = errorHandler(weatherCheckData.error)
+      setError(new Error(message))
+      setDrawerDialogOpen(false)
+    }
+  }, [weatherCheckData.data, weatherCheckData.isFetching, weatherCheckData.error, setWeatherData])
+
+  // Error handler
+  useEffect(() => {
+    if (error) {
+      const { message, description } = errorHandler(error)
+      toast.error(message, {
+        description: description,
+        className: 'sm:min-w-[420px] flex gap-4',
+        richColors: true,
+        duration: 10000,
+        dismissible: true,
+        cancel: <Button className='ml-auto' variant="outline" onClick={() => toast.dismiss()}>Close</Button>,
+      })
+    }
+  }, [error])
+
+
+  const {
+    data: coords,
+    error: geoError
+  } = useGeolocation()
+
+  const {
+    data: autoLocation,
+    error: autoError
+  } = useLocationByCoords(coords?.lat ?? undefined, coords?.lng ?? undefined)
+
+  const {
+    data: searchLocation,
+    error: searchError,
+    isFetching: searchIsFetching
+  } = useLocationBySearch(searchQuery, shouldSearch)
+
+
+
+  // const displayLocation = searchLocation || autoLocation 
+  const displayError = searchError || autoError || geoError
+
+  useEffect(() => {
+    setLocation(autoLocation)
+  }, [autoLocation])
+
+  useEffect(() => {
+    if (searchLocation) {
+      setLocation(searchLocation)
+    }
+
+    if (displayError) {
+      setError(displayError)
+    } else {
+      setError(null)
+    }
+
+    setSearchLoading(searchIsFetching)
+    // console.log({ displayLocation }, { displayError })
+  }, [searchLocation, displayError, searchIsFetching])
 
   return (
     <>
-      <MapTest />
+      <div className="max-w-4xl mx-auto" >
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="p-4 pt-2 sm:p-6 flex flex-col gap-4" >
+            <LocationSection />
+            <div className="space-y-6">
+              <DatesSection handleCheckWeatherQuery={handleCheckWeatherQuery} dataPending={weatherCheckData.isFetching} />
+              <DrawerDialog data={weatherData} open={drawerDialogOpen} setOpen={setDrawerDialogOpen} fetchingData={weatherCheckData.isFetching} />
+            </div>
+          </div >
+        </div>
+      </div>
     </>
   )
 }
