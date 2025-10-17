@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Header } from './components/Header.tsx'
 import { Toaster } from 'sonner'
 // import { StrictMode } from 'react'
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const queryClient = new QueryClient();
 
